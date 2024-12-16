@@ -3,30 +3,25 @@ import { useEffect, useState } from "react";
 
 
 
-function Timer({hours = 0, minutes = 0, seconds = 0}) {
+function Timer() {
         const [paused, setPaused] = useState(false);
         const [over, setOver] = useState(false);
-        const [[h, m, s], setTime] = useState([hours, minutes, seconds]);
+        const [time, setTime] = useState(40);
       
         const tick = () => {
           if (paused || over) return;
-          if (h === 0 && m === 0 && s === 0) setOver(true);
-          else if (m === 0 && s === 0) {
-            setTime([h - 1, 59, 59]);
-          } else if (s == 0) {
-            setTime([h, m - 1, 59]);
-          } else {
-            setTime([h, m, s - 1]);
-          }
+          if (time === 0) setOver(true);
+           else {
+            setTime(time -1);
+          } 
         };
       
         const reset = () => {
-          setTime([parseInt(hours), parseInt(minutes), parseInt(seconds)]);
+          setTime(40);
           setPaused(false);
           setOver(false);
         };
       
-
         useEffect(() => {
           const timerID = setInterval(() => tick(), 1000);
           return () => clearInterval(timerID);
@@ -34,14 +29,15 @@ function Timer({hours = 0, minutes = 0, seconds = 0}) {
       
         return (
           <div>
-            <p>{`${h.toString().padStart(2, '0')}:${m
+            <p>{`${Math.floor(time/60)
               .toString()
-              .padStart(2, '0')}:${s.toString().padStart(2, '0')}`}</p>
+              .padStart(2, '0')}:${Math.floor(time%60).toString().padStart(2, '0')}`}</p>
             <div>{over ? "Time's up!" : ''}</div>
             <button onClick={() => setPaused(!paused)}>
               {paused ? 'Resume' : 'Pause'}
             </button>
             <button onClick={() => reset()}>Restart</button>
+            <button onClick={() => setTime(time + 40)}>Add 40 seconds</button>
           </div>
         );
       };  
