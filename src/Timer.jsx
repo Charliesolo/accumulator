@@ -1,38 +1,42 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { timingsRequired } from "./utils/timings";
-import beep from "./assets/beep.mp3"
+import beep from "./assets/beep.mp3";
 
 function Timer({ setRest }) {
-  const [paused, setPaused] = useState(false);
+  const [paused, setPaused] = useState(true);
   const [over, setOver] = useState(false);
   const [time, setTime] = useState(40);
   const [reps, setReps] = useState("1");
   const [sets, setSets] = useState([]);
+  const bleep = useRef(new Audio(beep));
 
   const tick = () => {
     if (paused || over) return;
-    if (time === 0 && sets.length === 0) {
-      setOver(true);
-      return;
-    } else {
-      if (time === 0) {
-        const newSets = [...sets];
-        newSets.shift();
-        if (newSets.length === 0) {
-          setOver(true);
-          setRest(true);
-        }
-        setTime(newSets[0]);
-        setSets(newSets);
-        if (newSets[0] === 20) {
-          setRest(false);
-        }
-        if (newSets[0] === 15) {
-          setRest(true);
-        }
-      } else {
-        setTime(time - 1);
+    if (time === 0) {
+      playBeep();
+      const newSets = [...sets];
+      newSets.shift();
+      if (newSets.length === 0) {
+        setOver(true);
+        setRest(true);
+        setPaused(true);
+        setTimeout(() => {
+          playBeep();
+        }, 1000);
+        setTimeout(() => {
+          playBeep();
+        }, 2000);
       }
+      setTime(newSets[0]);
+      setSets(newSets);
+      if (newSets[0] === 20) {
+        setRest(false);
+      }
+      if (newSets[0] === 15) {
+        setRest(true);
+      }
+    } else {
+      setTime(time - 1);
     }
   };
 
@@ -41,7 +45,6 @@ function Timer({ setRest }) {
     return () => clearInterval(timerID);
   });
 
-
   const handleChange = (e) => {
     e.preventDefault();
     setReps(e.target.value);
@@ -49,28 +52,20 @@ function Timer({ setRest }) {
 
   const handleStart = (e) => {
     e.preventDefault();
-    setSets(timingsRequired(reps));
-    console.log(sets);
-    setTime(sets[0]);
+    const newSets = timingsRequired(reps)
+    setSets(newSets);
+    setTime(newSets[0]);
     setPaused(false);
     setOver(false);
-    setRest(false)
+    setRest(false);
+  };
+
+  const playBeep = () => {
+    bleep.current.play();
   };
 
   return (
     <div>
-      <p>{`${Math.floor(time / 60)
-        .toString()
-        .padStart(2, "0")}:${Math.floor(time % 60)
-        .toString()
-        .padStart(2, "0")}`}</p>
-      <div>{over ? "Time's up!" : ""}</div>
-      {sets.map((set) => {
-        return set === 20 ? <p>Exercise</p> : <p> Rest</p>;
-      })}
-      <button onClick={() => setPaused(!paused)}>
-        {paused ? "Resume" : "Pause"}
-      </button>
       <label htmlFor="repsSelect">Number of sets</label>
       <select
         name="repsSelect"
@@ -90,6 +85,18 @@ function Timer({ setRest }) {
         <option value="10">10</option>
       </select>
       <button onClick={handleStart}>Set Reps</button>
+      <button onClick={() => setPaused(!paused)}>
+        {paused ? "Resume" : "Pause"}
+      </button>
+      <p>{`${Math.floor(time / 60)
+        .toString()
+        .padStart(2, "0")}:${Math.floor(time % 60)
+        .toString()
+        .padStart(2, "0")}`}</p>
+      <div>{over ? "Time's up!" : ""}</div>
+      {sets.map((set, index) => {
+        return set === 20 ? <p> Exercise</p> : <p> Rest</p>;
+      })}
     </div>
   );
 }
